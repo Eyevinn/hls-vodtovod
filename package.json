@@ -1,0 +1,24 @@
+{
+  "name": "@eyevinn/hls-vodtovod",
+  "version": "0.1.0",
+  "description": "Library to concatenate multiple HLS VODs into a new VOD",
+  "main": "dist/index.js",
+  "scripts": {
+    "build": "tsc --project ./",
+    "postversion": "git push && git push --tags",
+    "test": "jest"
+  },
+  "author": "Eyevinn Technology AB <work@eyevinn.se>",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^27.0.3",
+    "@types/node": "^17.0.5",
+    "jest": "^27.4.5",
+    "ts-jest": "^27.1.2",
+    "typescript": "^4.5.4"
+  },
+  "dependencies": {
+    "@eyevinn/m3u8": "^0.4.4",
+    "node-fetch": "^2.6.5"
+  }
+}
