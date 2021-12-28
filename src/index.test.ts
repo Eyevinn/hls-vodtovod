@@ -38,7 +38,6 @@ describe("VOD2VOD library", () => {
     const m3u = hlsVod.getVariant(bw);
     expect(m3u.get("targetDuration")).toEqual(11);
     expect(Math.ceil(m3u.totalDuration())).toEqual(318);
-    console.log(m3u.toString());
   });
 
   test("can concatenate three VODs of different bitrates", async () => {
@@ -60,6 +59,6 @@ describe("VOD2VOD library", () => {
     const m3u = hlsVod.getVariant(bw);
     expect(m3u.get("targetDuration")).toEqual(11);
     expect(Math.ceil(m3u.totalDuration())).toEqual(136);
-    console.log(m3u.toString());
+    expect(hlsVod.getMultiVariant().length).toEqual(3);
   });
 });

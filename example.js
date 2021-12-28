@@ -14,6 +14,9 @@ const { HLSVod } = require("./dist/index.js");
 
   const hlsVod = new HLSVod(playlist);
   await hlsVod.load();
+  console.log(hlsVod.getBandwidths());
+  console.log(hlsVod.toString());
+
   const bw = hlsVod.getBandwidths()[0];
   console.log(hlsVod.getVariant(bw).toString());
 })();

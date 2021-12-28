@@ -17,10 +17,12 @@ const findNearestBw = (bw, array) => {
 export class HLSVod {
   private playlist: IPlaylistEntry[];
   private variants: {[bw: string]: any};
+  private streams: any[];
 
   constructor(playlist: IPlaylistEntry[]) {
     this.playlist = playlist;
     this.variants = {};
+    this.streams = [];
   }
 
   async load(manifestLoader?: IManifestLoader) {
@@ -44,6 +46,21 @@ export class HLSVod {
     return Object.keys(this.variants);
   }
 
+  getMultiVariant() {
+    return this.streams;
+  }
+
+  toString() {
+    let m3u8 = "";
+    m3u8 += "#EXTM3U\n" +
+      "#EXT-X-VERSION:3\n" +
+      "#EXT-X-INDEPENDENT-SEGMENTS\n";
+    this.getMultiVariant().map(item => {
+      m3u8 += item.toString() + "\n";
+    })
+    return m3u8;
+  }
+
   private async concat(m3ulist: any[], loader: IManifestLoader) {
     let i = 0;
     let variants = {};
@@ -62,10 +79,10 @@ export class HLSVod {
         const bw = streamItem.get("bandwidth");
         if (i > 0) {
           const nearestBw = findNearestBw(bw, Object.keys(variants));
-          variants[nearestBw].push(variant);
+          variants[nearestBw].push({ stream: streamItem, variant: variant });
         } else {
           variants[bw] = [];
-          variants[bw].push(variant);
+          variants[bw].push({ stream: streamItem, variant: variant });
         }
       }
       i++;
@@ -76,9 +93,11 @@ export class HLSVod {
       } else {
         let newM3u;
         for (let i = 0; i < variants[bw].length; i++) {
-          const m3u = variants[bw][i];
+          const m3u = variants[bw][i].variant;
           if (i === 0) {
             newM3u = m3u;
+            variants[bw][i].stream.set("uri", "manifest_" + bw + ".m3u8");
+            this.streams.push(variants[bw][i].stream);
           } else {
             m3u.items.PlaylistItem[0].set("discontinuity", true);
           }
