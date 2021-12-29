@@ -9,6 +9,10 @@
     "test": "jest"
   },
   "author": "Eyevinn Technology AB <work@eyevinn.se>",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Eyevinn/hls-vodtovod.git"
+  },
   "license": "MIT",
   "devDependencies": {
     "@types/jest": "^27.0.3",
