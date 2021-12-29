@@ -56,12 +56,12 @@ export class HLSVod {
     return this.streams;
   }
 
-  toString() {
+  toString(modifier?: (bw: string) => string) {
     let m3u8 = "";
     m3u8 += "#EXTM3U\n" +
       "#EXT-X-VERSION:3\n" +
       "#EXT-X-INDEPENDENT-SEGMENTS\n";
-    this.getMultiVariant().map(item => {
+    this.getMultiVariant(modifier).map(item => {
       m3u8 += item.toString() + "\n";
     })
     return m3u8;
