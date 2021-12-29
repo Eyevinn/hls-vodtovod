@@ -51,7 +51,16 @@ console.log(hlsVod.getVariant(bw).toString());
 // https://lab.cdn.eyevinn.technology/THE_GRAND_BUDAPEST_HOTEL_Trailer_2014.mp4/manifest_1_00003.ts
 // ...
 // #EXT-X-ENDLIST
+
+console.log(hlsVod.toString());
+
+// #EXTM3U
+// #EXT-X-VERSION:3
+// #EXT-X-INDEPENDENT-SEGMENTS
+// #EXT-X-STREAM-INF:BANDWIDTH=1689191,AVERAGE-BANDWIDTH=1423776,CODECS="avc1.4d4028,mp4a.40.2",RESOLUTION=1600x900,FRAME-RATE=23.976
+// manifest_1689191.m3u8
 ```
+
 
 # About Eyevinn Technology
 
