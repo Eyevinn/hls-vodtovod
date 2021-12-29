@@ -46,7 +46,13 @@ export class HLSVod {
     return Object.keys(this.variants);
   }
 
-  getMultiVariant() {
+  getMultiVariant(modifier?: (bw: string) => string) {
+    if (modifier) {
+      this.streams.map(streamItem => {
+        const uri = modifier(streamItem.get("bandwidth"));
+        streamItem.set("uri", uri);
+      });
+    }
     return this.streams;
   }
 
