@@ -106,8 +106,8 @@ export class HLSVod {
             this.streams.push(variants[bw][i].stream);
           } else {
             m3u.items.PlaylistItem[0].set("discontinuity", true);
+            newM3u.items.PlaylistItem = newM3u.items.PlaylistItem.concat(m3u.items.PlaylistItem);
           }
-          newM3u.items.PlaylistItem = newM3u.items.PlaylistItem.concat(m3u.items.PlaylistItem);
         }
         const targetDuration = newM3u.items.PlaylistItem
                                 .map(item => item.get("duration"))
