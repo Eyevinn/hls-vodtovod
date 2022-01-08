@@ -4,12 +4,17 @@ import { FileManifestLoader } from "./manifest_loader";
 describe("VOD2VOD library", () => {
   test("can load and parse an HLS VOD on Internet", async () => {
     const playlist: IPlaylistEntry[] = [{
-      id: "001",
+      id: "5050630b-b599-4e66-8033-f9f6139a7284",
       uri: "https://lab.cdn.eyevinn.technology/NO_TIME_TO_DIE_short_Trailer_2021.mp4/manifest.m3u8",
+    }, {
+      id: "21053ee7-b289-4210-869e-43f355357332",
+      uri: "https://lab.cdn.eyevinn.technology/THE_GRAND_BUDAPEST_HOTEL_Trailer_2014.mp4/manifest.m3u8",
     }];
     const hlsVod = new HLSVod(playlist);
     await hlsVod.load();
-    expect(hlsVod.getMultiVariant().length).toEqual(4);
+    const bws = hlsVod.getBandwidths();
+    //console.log(hlsVod.getVariant(bws[0]).toString());
+    expect(hlsVod.getMultiVariant().length).toEqual(2);
   });
 
   test("can load and parse an HLS VOD on disk", async () => {
@@ -39,7 +44,7 @@ describe("VOD2VOD library", () => {
     const bw = hlsVod.getBandwidths()[0];
     const m3u = hlsVod.getVariant(bw);
     expect(m3u.get("targetDuration")).toEqual(11);
-    expect(Math.ceil(m3u.totalDuration())).toEqual(318);
+    expect(Math.ceil(m3u.totalDuration())).toEqual(212);
   });
 
   test("can concatenate three VODs of different bitrates", async () => {
@@ -60,7 +65,7 @@ describe("VOD2VOD library", () => {
     const bw = hlsVod.getBandwidths()[0];
     const m3u = hlsVod.getVariant(bw);
     expect(m3u.get("targetDuration")).toEqual(11);
-    expect(Math.ceil(m3u.totalDuration())).toEqual(136);
+    expect(Math.ceil(m3u.totalDuration())).toEqual(126);
     const streamList = hlsVod.getMultiVariant();
     expect(streamList.length).toEqual(3);
     streamList.map(stream => {
