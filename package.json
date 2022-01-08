@@ -1,6 +1,6 @@
 {
   "name": "@eyevinn/hls-vodtovod",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Library to concatenate multiple HLS VODs into a new VOD",
   "main": "dist/index.js",
   "scripts": {
