@@ -114,8 +114,8 @@ describe("VOD2VOD library", () => {
     const bws = hlsVod.getBandwidths();
     const lines = hlsVod.getVariant(bws[0]).toString().split("\n");
     expect(lines[5]).toEqual("#EXT-X-PROGRAM-DATE-TIME:1970-01-01T00:00:00.001Z");
-    expect(lines[6]).toEqual('#EXT-X-DATERANGE:ID="001",CLASS="se.eyevinn.vodtovod",START-DATE="1970-01-01T00:00:00.001Z",DURATION=10,X-TITLE="First one"');
-    expect(lines[10]).toEqual('#EXT-X-DATERANGE:ID="002",CLASS="se.eyevinn.vodtovod",START-DATE="1970-01-01T00:00:10.001Z",DURATION=105.68644400000001,X-TITLE="Second one"');
-    expect(lines[40]).toEqual('#EXT-X-DATERANGE:ID="003",CLASS="se.eyevinn.vodtovod",START-DATE="1970-01-01T00:01:55.687Z",DURATION=10,X-TITLE="Last one"');
+    expect(lines[6]).toEqual('#EXT-X-DATERANGE:ID="1",CLASS="se.eyevinn.vodtovod",START-DATE="1970-01-01T00:00:00.001Z",DURATION=10,X-TITLE="First one",X-ASSET-ID="001"');
+    expect(lines[10]).toEqual('#EXT-X-DATERANGE:ID="2",CLASS="se.eyevinn.vodtovod",START-DATE="1970-01-01T00:00:10.001Z",DURATION=105.68644400000001,X-TITLE="Second one",X-ASSET-ID="002"');
+    expect(lines[40]).toEqual('#EXT-X-DATERANGE:ID="3",CLASS="se.eyevinn.vodtovod",START-DATE="1970-01-01T00:01:55.687Z",DURATION=10,X-TITLE="Last one",X-ASSET-ID="003"');
   });
 });

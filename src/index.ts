@@ -112,12 +112,12 @@ export class HLSVod {
             this.streams.push(variants[bw][i].stream);
             newM3u.items.PlaylistItem[0].set("date", new Date(1));
             newM3u.items.PlaylistItem[0].set("daterange", 
-              `ID=${variants[bw][i].item.id},CLASS="se.eyevinn.vodtovod",START-DATE="${startDate}",DURATION="${newM3u.totalDuration()}",X-TITLE="${variants[bw][i].item.title}"`);
+              `ID=${i + 1},CLASS="se.eyevinn.vodtovod",START-DATE="${startDate}",DURATION="${newM3u.totalDuration()}",X-TITLE="${variants[bw][i].item.title}",X-ASSET-ID="${variants[bw][i].item.id}"`);
             offset += newM3u.totalDuration() * 1000;
           } else {
             m3u.items.PlaylistItem[0].set("discontinuity", true);
             m3u.items.PlaylistItem[0].set("daterange", 
-              `ID=${variants[bw][i].item.id},CLASS="se.eyevinn.vodtovod",START-DATE="${startDate}",DURATION="${m3u.totalDuration()}",X-TITLE="${variants[bw][i].item.title}"`);
+              `ID=${i + 1},CLASS="se.eyevinn.vodtovod",START-DATE="${startDate}",DURATION="${m3u.totalDuration()}",X-TITLE="${variants[bw][i].item.title}",X-ASSET-ID="${variants[bw][i].item.id}"`);
             newM3u.items.PlaylistItem = newM3u.items.PlaylistItem.concat(m3u.items.PlaylistItem);
             offset += m3u.totalDuration() * 1000;
           }
