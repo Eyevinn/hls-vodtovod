@@ -1,4 +1,3 @@
-import m3u8 from "@eyevinn/m3u8";
 import { IManifestLoader, HTTPManifestLoader } from "./manifest_loader";
 
 export interface IPlaylistEntry {
@@ -33,7 +32,12 @@ export class HLSVod {
     let m3ulist = [];
     for(let entry of this.playlist) {
       const m3u = await loader.load(entry.uri);
-      m3ulist.push({ uri: entry.uri, m3u: m3u });
+      m3ulist.push({
+        id: entry.id,
+        title: entry.title,
+        uri: entry.uri,
+        m3u: m3u
+      });
     }
     await this.concat(m3ulist, loader);
   }
@@ -85,10 +89,10 @@ export class HLSVod {
         const bw = streamItem.get("bandwidth");
         if (i > 0) {
           const nearestBw = findNearestBw(bw, Object.keys(variants));
-          variants[nearestBw].push({ stream: streamItem, variant: variant });
+          variants[nearestBw].push({ stream: streamItem, variant: variant, item: item });
         } else {
           variants[bw] = [];
-          variants[bw].push({ stream: streamItem, variant: variant });
+          variants[bw].push({ stream: streamItem, variant: variant, item: item });
         }
       }
       i++;
@@ -98,15 +102,24 @@ export class HLSVod {
         delete variants[bw];
       } else {
         let newM3u;
+        let offset = 0;
         for (let i = 0; i < variants[bw].length; i++) {
           const m3u = variants[bw][i].variant;
+          const startDate = (new Date(1 + offset)).toISOString();
           if (i === 0) {
             newM3u = m3u;
             variants[bw][i].stream.set("uri", "manifest_" + bw + ".m3u8");
             this.streams.push(variants[bw][i].stream);
+            newM3u.items.PlaylistItem[0].set("date", new Date(1));
+            newM3u.items.PlaylistItem[0].set("daterange", 
+              `ID=${i + 1},CLASS="se.eyevinn.vodtovod",START-DATE="${startDate}",DURATION="${newM3u.totalDuration()}",X-TITLE="${variants[bw][i].item.title}",X-ASSET-ID="${variants[bw][i].item.id}"`);
+            offset += newM3u.totalDuration() * 1000;
           } else {
             m3u.items.PlaylistItem[0].set("discontinuity", true);
+            m3u.items.PlaylistItem[0].set("daterange", 
+              `ID=${i + 1},CLASS="se.eyevinn.vodtovod",START-DATE="${startDate}",DURATION="${m3u.totalDuration()}",X-TITLE="${variants[bw][i].item.title}",X-ASSET-ID="${variants[bw][i].item.id}"`);
             newM3u.items.PlaylistItem = newM3u.items.PlaylistItem.concat(m3u.items.PlaylistItem);
+            offset += m3u.totalDuration() * 1000;
           }
         }
         const targetDuration = newM3u.items.PlaylistItem
