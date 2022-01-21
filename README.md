@@ -4,6 +4,8 @@
 
 Node library to concatenate a list of HLS VODs into a new HLS VOD
 
+Try a demo here: https://poc.eyevinn.technology/hls-vodtovod/index.html
+
 ## Installation
 
 ```
