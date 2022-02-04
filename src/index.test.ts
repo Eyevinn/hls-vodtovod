@@ -2,7 +2,7 @@ import { HLSVod, IPlaylistEntry } from "./index";
 import { FileManifestLoader } from "./manifest_loader";
 
 describe("VOD2VOD library", () => {
-  test("can load and parse an HLS VOD on Internet", async () => {
+  test.skip("can load and parse an HLS VOD on Internet", async () => {
     const playlist: IPlaylistEntry[] = [
       {
         id: "5050630b-b599-4e66-8033-f9f6139a7284",
@@ -147,7 +147,7 @@ describe("VOD2VOD library", () => {
 });
 
 describe("VOD2VOD library, Multi-Audio Tracks", () => {
-  test("can load and parse a demux HLS VOD on Internet", async () => {
+  test.skip("can load and parse a demux HLS VOD on Internet", async () => {
     const playlist: IPlaylistEntry[] = [
       {
         id: "5050630b-b599-4e66-8033-f9f6139a7284",
