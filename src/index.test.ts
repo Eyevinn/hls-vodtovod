@@ -147,7 +147,7 @@ describe("VOD2VOD library", () => {
 });
 
 describe("VOD2VOD library, Multi-Audio Tracks", () => {
-  test.only("can load and parse a demux HLS VOD on Internet", async () => {
+  test("can load and parse a demux HLS VOD on Internet", async () => {
     const playlist: IPlaylistEntry[] = [
       {
         id: "5050630b-b599-4e66-8033-f9f6139a7284",
@@ -174,7 +174,7 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
     expect(hlsVod.getMultiVariant().length).toEqual(5);
   });
 
-  test.only("can load and parse a demuxed HLS VOD on disk", async () => {
+  test("can load and parse a demuxed HLS VOD on disk", async () => {
     const playlist: IPlaylistEntry[] = [
       {
         id: "001",
@@ -187,7 +187,7 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
     expect(hlsVod.getMultiVariant().length).toEqual(9);
   });
 
-  test.only("can concatenate two demuxed VODs of same GroupIDs (and same languages)", async () => {
+  test("can concatenate two demuxed VODs of same GroupIDs (and same languages)", async () => {
     const playlist: IPlaylistEntry[] = [
       {
         id: "001",
@@ -214,7 +214,7 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
     });
   });
 
-  test.only("can concatenate three demuxed VODs of different GroupIDs (and same languages)", async () => {
+  test("can concatenate three demuxed VODs of different GroupIDs (and same languages)", async () => {
     const playlist: IPlaylistEntry[] = [
       {
         id: "001",
@@ -252,7 +252,7 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
     });
   });
 
-  test.only("can concatenate two demuxed VODs of same GroupIDs (and 1 different language -> replace with default language)", async () => {
+  test("can concatenate two demuxed VODs of same GroupIDs (and 1 different language -> replace with default language)", async () => {
     const playlist: IPlaylistEntry[] = [
       {
         id: "001",
@@ -285,7 +285,7 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
     });
   });
 
-  test.only("can concatenate two demuxed VODs of same GroupIDs (and 2 different language -> replace with default language)", async () => {
+  test("can concatenate two demuxed VODs of same GroupIDs (and 2 different language -> replace with default language)", async () => {
     const playlist: IPlaylistEntry[] = [
       {
         id: "001",
@@ -318,7 +318,7 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
     });
   });
 
-  test.only("can concatenate two demuxed VODs with 1 of 2 GroupIDs matching (and same languages)", async () => {
+  test("can concatenate two demuxed VODs with 1 of 2 GroupIDs matching (and same languages)", async () => {
     const playlist: IPlaylistEntry[] = [
       {
         id: "001",
@@ -351,7 +351,7 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
     });
   });
 
-  test.only("can concatenate two demuxed VODs with 2 of 2 GroupIDs matching (and same languages)", async () => {
+  test("can concatenate two demuxed VODs with 2 of 2 GroupIDs matching (and same languages)", async () => {
     const playlist: IPlaylistEntry[] = [
       {
         id: "001",
@@ -384,7 +384,7 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
     });
   });
 
-  test.only("can concatenate two demuxed VODs with 0 of 2 GroupIDs matching (and no common languages)", async () => {
+  test("can concatenate two demuxed VODs with 0 of 2 GroupIDs matching (and no common languages)", async () => {
     const playlist: IPlaylistEntry[] = [
       {
         id: "001",
@@ -417,7 +417,7 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
     });
   });
 
-  test.only("can specify format of variant playlist URIs", async () => {
+  test("can specify format of variant playlist URIs", async () => {
     const playlist: IPlaylistEntry[] = [
       {
         id: "001",
@@ -453,7 +453,7 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
     });
   });
 
-  test.only("inserts a daterange for each demuxed VOD", async () => {
+  test("inserts a daterange for each demuxed VOD", async () => {
     const playlist: IPlaylistEntry[] = [
       {
         id: "001",
