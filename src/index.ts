@@ -89,14 +89,16 @@ export class HLSVod {
     return Object.keys(this.audioVariants[groupId]);
   }
 
-  getMultiVariant(modifier?: (bw: string) => string) {
+  getMultiVariant(modifier?: (bw: string) => string, audioModifier?: (groupAndLang: string) => string) {
     if (modifier) {
       this.streams.map((streamItem) => {
         const uri = modifier(streamItem.get("bandwidth"));
         streamItem.set("uri", uri);
       });
+    }
+    if (audioModifier) {
       this.audioStreams.map((mediaItem) => {
-        const uri = modifier(mediaItem.get("group") + "-" + mediaItem.get("language"));
+        const uri = audioModifier(mediaItem.get("group-id") + "-" + mediaItem.get("language"));
         mediaItem.set("uri", uri);
       });
     }
@@ -147,7 +149,6 @@ export class HLSVod {
               currentAudioVariants[currGroup][currGroupLang].push(newAudioVariants[defaultGroup][currGroupLang][0]);
             } else {
               // Push Default
-
               const defaultGroupLang = defaultGroupLangs[0];
               let thing = newAudioVariants[defaultGroup][defaultGroupLang][0];
               console.log(1998, defaultGroupLangs, defaultGroup, defaultGroupLang, thing);
@@ -262,33 +263,27 @@ export class HLSVod {
 
       /**
        *  LOG CITY!!
-       *
-       *
-       *
-       *
-       *
-       *
        */
-      if (Object.keys(temp).length > 0) {
-        console.log(`-=TEMP=-\nGroups & Langs->`);
+      // if (Object.keys(temp).length > 0) {
+      //   console.log(`-=TEMP=-\nGroups & Langs->`);
 
-        Object.keys(temp)?.forEach((group, indexG) => {
-          console.log(`G${indexG}:${group}`);
-          Object.keys(temp[group]).forEach((lang, indexL) => {
-            console.log(`L${indexL}:${lang}`);
-          });
-        });
-      }
-      if (Object.keys(audioVariants).length > 0) {
-        console.log(`-=AUDIO-VARI=-\nGroups & Langs->`);
+      //   Object.keys(temp)?.forEach((group, indexG) => {
+      //     console.log(`G${indexG}:${group}`);
+      //     Object.keys(temp[group]).forEach((lang, indexL) => {
+      //       console.log(`L${indexL}:${lang}`);
+      //     });
+      //   });
+      // }
+      // if (Object.keys(audioVariants).length > 0) {
+      //   console.log(`-=AUDIO-VARI=-\nGroups & Langs->`);
 
-        Object.keys(audioVariants)?.forEach((group, indexG) => {
-          console.log(`G${indexG}:${group}`);
-          Object.keys(audioVariants[group]).forEach((lang, indexL) => {
-            console.log(`L${indexL}:${lang}_____size=${audioVariants[group][lang].length}`);
-          });
-        });
-      }
+      //   Object.keys(audioVariants)?.forEach((group, indexG) => {
+      //     console.log(`G${indexG}:${group}`);
+      //     Object.keys(audioVariants[group]).forEach((lang, indexL) => {
+      //       console.log(`L${indexL}:${lang}_____size=${audioVariants[group][lang].length}`);
+      //     });
+      //   });
+      // }
       // MAP THEM: Merge as good as possible
       this.mapAudioVariants(temp, audioVariants);
       i++;
