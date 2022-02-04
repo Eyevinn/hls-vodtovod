@@ -172,7 +172,7 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
       });
     });
     expect(hlsVod.getMultiVariant().length).toEqual(5);
-  });
+  }, 6000);
 
   test("can load and parse a demuxed HLS VOD on disk", async () => {
     const playlist: IPlaylistEntry[] = [
