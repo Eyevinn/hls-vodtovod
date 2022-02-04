@@ -58,7 +58,6 @@ export class HLSVod {
     let m3ulist = [];
     for (let entry of this.playlist) {
       const m3u = await loader.load(entry.uri);
-      console.log(JSON.stringify(m3u, null, 2));
       m3ulist.push({
         id: entry.id,
         title: entry.title,
@@ -120,8 +119,6 @@ export class HLSVod {
     if (newGroups.length === 0) {
       return;
     }
-    console.log(1337, currentAudioVariants, newAudioVariants);
-    console.log(newAudioVariants["audio"]);
     currGroups.forEach((currGroup) => {
       if (newGroups.length > 0) {
         let currGroupLangs: string[];
@@ -151,7 +148,6 @@ export class HLSVod {
               // Push Default
               const defaultGroupLang = defaultGroupLangs[0];
               let thing = newAudioVariants[defaultGroup][defaultGroupLang][0];
-              console.log(1998, defaultGroupLangs, defaultGroup, defaultGroupLang, thing);
               currentAudioVariants[currGroup][currGroupLang].push(thing);
             }
           });
@@ -284,6 +280,7 @@ export class HLSVod {
       //     });
       //   });
       // }
+      
       // MAP THEM: Merge as good as possible
       this.mapAudioVariants(temp, audioVariants);
       i++;

@@ -4,7 +4,7 @@ const { HLSVod } = require("./dist/index.js");
   const playlist = [
     {
       id: "002",
-      uri: "https://lab-live.cdn.eyevinn.technology/DEMUX_001/master_demux_aac-stereo-en-fr.m3u8",
+      uri: "https://lab-live.cdn.eyevinn.technology/DEMUX_001/master_demux_aac-en-fr.m3u8",
     },
     {
       id: "001",
