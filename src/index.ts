@@ -121,13 +121,10 @@ export class HLSVod {
     }
     currGroups.forEach((currGroup) => {
       if (newGroups.length > 0) {
-        let currGroupLangs: string[];
-        let newGroupLangs: string[];
+        const currGroupLangs: string[] = Object.keys(currentAudioVariants[currGroup]);
 
         if (newGroups.includes(currGroup)) {
-          // Group Matches. Next Compare the group Langs
-          currGroupLangs = Object.keys(currentAudioVariants[currGroup]);
-          newGroupLangs = Object.keys(newAudioVariants[currGroup]);
+          const newGroupLangs: string[] = Object.keys(newAudioVariants[currGroup]);
           currGroupLangs.forEach((currGroupLang) => {
             if (newGroupLangs.includes(currGroupLang)) {
               currentAudioVariants[currGroup][currGroupLang].push(newAudioVariants[currGroup][currGroupLang][0]);
@@ -137,8 +134,6 @@ export class HLSVod {
             }
           });
         } else {
-          currGroupLangs = Object.keys(currentAudioVariants[currGroup]);
-          // Use default rather than matching.
           const defaultGroup = newGroups[0];
           const defaultGroupLangs = Object.keys(newAudioVariants[defaultGroup]);
           currGroupLangs.forEach((currGroupLang) => {
@@ -162,7 +157,7 @@ export class HLSVod {
     let audioVariants: IAudioVariants = {};
 
     for (let vodItem of m3ulist) {
-      let temp: IAudioVariants = {}; // reset temp.
+      let temp: IAudioVariants = {};
       let baseUrl;
       const m = vodItem.uri.match(/^(.*)\/.*?$/);
       if (m) {
@@ -197,19 +192,19 @@ export class HLSVod {
         if (mediaItem.attributes.attributes["type"] === "AUDIO") {
           const audioVariantM3U = await loader.load(baseUrl + mediaItem.get("uri"));
           audioVariantM3U.items.PlaylistItem.map((item) => {
-            // Turn relative path to absolute path on all segment items
             const uri = item.get("uri");
             item.set("uri", baseUrl + uri);
           });
           const groupId = mediaItem.get("group-id");
           const language = mediaItem.get("language");
-          // Non-first VODs do this!
+
           if (i > 0) {
             if (!temp[groupId]) {
               temp[groupId] = {};
             }
             if (language) {
               if (!temp[groupId][language]) {
+                // To avoid pushing different tracks of same language
                 temp[groupId][language] = [];
                 temp[groupId][language].push({
                   stream: mediaItem,
@@ -218,7 +213,7 @@ export class HLSVod {
                 });
               }
             } else {
-              // To cover case where no language attribute is present. Language is an Optional attribute after all.
+              // To cover case where no language attribute is present (since Language is an Optional attribute)
               if (!temp[groupId]["none"]) {
                 temp[groupId]["none"] = [];
                 temp[groupId]["none"].push({
@@ -229,14 +224,12 @@ export class HLSVod {
               }
             }
           } else {
-            // The first VOD does this!
             if (!audioVariants[groupId]) {
               audioVariants[groupId] = {};
             }
             if (language) {
               if (!audioVariants[groupId][language]) {
                 audioVariants[groupId][language] = [];
-                // To avoid pushing same lang tracks eg(en & en comentary). Only push to a new lang once.
                 audioVariants[groupId][language].push({
                   stream: mediaItem,
                   variant: audioVariantM3U,
@@ -256,39 +249,11 @@ export class HLSVod {
           }
         }
       }
-
-      /**
-       *  LOG CITY!!
-       */
-      // if (Object.keys(temp).length > 0) {
-      //   console.log(`-=TEMP=-\nGroups & Langs->`);
-
-      //   Object.keys(temp)?.forEach((group, indexG) => {
-      //     console.log(`G${indexG}:${group}`);
-      //     Object.keys(temp[group]).forEach((lang, indexL) => {
-      //       console.log(`L${indexL}:${lang}`);
-      //     });
-      //   });
-      // }
-      // if (Object.keys(audioVariants).length > 0) {
-      //   console.log(`-=AUDIO-VARI=-\nGroups & Langs->`);
-
-      //   Object.keys(audioVariants)?.forEach((group, indexG) => {
-      //     console.log(`G${indexG}:${group}`);
-      //     Object.keys(audioVariants[group]).forEach((lang, indexL) => {
-      //       console.log(`L${indexL}:${lang}_____size=${audioVariants[group][lang].length}`);
-      //     });
-      //   });
-      // }
-      
-      // MAP THEM: Merge as good as possible
+      // Map audio tracks: Merge as good as possible
       this.mapAudioVariants(temp, audioVariants);
       i++;
     }
-
-    // ---Add Metadata on all relavent segItems in each 'PlaylistItem'---
-
-    // For Video
+    // Rebuild streamItem URI & add Metadata (Video)
     Object.keys(variants).map((bw) => {
       if (variants[bw].length !== m3ulist.length) {
         delete variants[bw];
@@ -329,7 +294,7 @@ export class HLSVod {
         this.variants[bw] = newM3u;
       }
     });
-    // For audio
+    // Rebuild streamItem URI & add Metadata (Audio)
     const groups = Object.keys(audioVariants);
     groups.forEach((group) => {
       const groupLangs = Object.keys(audioVariants[group]);

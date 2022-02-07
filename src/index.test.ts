@@ -318,6 +318,72 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
     });
   });
 
+  test("can concatenate two demuxed VODs with 0 of 2 GroupIDs matching (and same languages)", async () => {
+    const playlist: IPlaylistEntry[] = [
+      {
+        id: "001",
+        uri: "./testvectors/demux_slate-aacec3-enfr/manifest.m3u8",
+      },
+      {
+        id: "002",
+        uri: "./testvectors/demux_slate-audio-enfr/manifest.m3u8",
+      },
+    ];
+
+    const hlsVod = new HLSVod(playlist);
+    const loader = new FileManifestLoader();
+    await hlsVod.load(loader);
+
+    const groups = hlsVod.getAudioGroups();
+    groups.forEach((group) => {
+      const groupLangs = hlsVod.getAudioLanguagesForGroup(group);
+      groupLangs.forEach((groupLang) => {
+        const m3u = hlsVod.getAudioVariant(group, groupLang);
+        expect(m3u.get("targetDuration")).toEqual(10);
+        expect(Math.ceil(m3u.totalDuration())).toEqual(20);
+      });
+      const m3u_1 = hlsVod.getAudioVariant(group, groupLangs[0]);
+      expect(m3u_1.items.PlaylistItem[0].get("uri")).toEqual(`./testvectors/demux_slate-aacec3-enfr/manifest_${group}-en_00001.aac`);
+      expect(m3u_1.items.PlaylistItem[1].get("uri")).toEqual(`./testvectors/demux_slate-audio-enfr/manifest_audio-en_00001.aac`);
+      const m3u_2 = hlsVod.getAudioVariant(group, groupLangs[1]);
+      expect(m3u_2.items.PlaylistItem[0].get("uri")).toEqual(`./testvectors/demux_slate-aacec3-enfr/manifest_${group}-fr_00001.aac`);
+      expect(m3u_2.items.PlaylistItem[1].get("uri")).toEqual(`./testvectors/demux_slate-audio-enfr/manifest_audio-fr_00001.aac`);
+    });
+  });
+
+  test("can concatenate two demuxed VODs with 0 of 2 GroupIDs matching (and no common languages)", async () => {
+    const playlist: IPlaylistEntry[] = [
+      {
+        id: "001",
+        uri: "./testvectors/demux_slate-aacec3-enfr/manifest.m3u8",
+      },
+      {
+        id: "002",
+        uri: "./testvectors/demux_slate-audio-dkde/manifest.m3u8",
+      },
+    ];
+
+    const hlsVod = new HLSVod(playlist);
+    const loader = new FileManifestLoader();
+    await hlsVod.load(loader);
+
+    const groups = hlsVod.getAudioGroups();
+    groups.forEach((group) => {
+      const groupLangs = hlsVod.getAudioLanguagesForGroup(group);
+      groupLangs.forEach((groupLang) => {
+        const m3u = hlsVod.getAudioVariant(group, groupLang);
+        expect(m3u.get("targetDuration")).toEqual(10);
+        expect(Math.ceil(m3u.totalDuration())).toEqual(20);
+      });
+      const m3u_1 = hlsVod.getAudioVariant(group, groupLangs[0]);
+      expect(m3u_1.items.PlaylistItem[0].get("uri")).toEqual(`./testvectors/demux_slate-aacec3-enfr/manifest_${group}-en_00001.aac`);
+      expect(m3u_1.items.PlaylistItem[1].get("uri")).toEqual(`./testvectors/demux_slate-audio-dkde/manifest_audio-dk_00001.aac`);
+      const m3u_2 = hlsVod.getAudioVariant(group, groupLangs[1]);
+      expect(m3u_2.items.PlaylistItem[0].get("uri")).toEqual(`./testvectors/demux_slate-aacec3-enfr/manifest_${group}-fr_00001.aac`);
+      expect(m3u_2.items.PlaylistItem[1].get("uri")).toEqual(`./testvectors/demux_slate-audio-dkde/manifest_audio-dk_00001.aac`);
+    });
+  });
+
   test("can concatenate two demuxed VODs with 1 of 2 GroupIDs matching (and same languages)", async () => {
     const playlist: IPlaylistEntry[] = [
       {
@@ -348,6 +414,39 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
       const m3u_2 = hlsVod.getAudioVariant(group, groupLangs[1]);
       expect(m3u_2.items.PlaylistItem[0].get("uri")).toEqual(`./testvectors/demux_slate-aacec3-enfr/manifest_${group}-fr_00001.aac`);
       expect(m3u_2.items.PlaylistItem[1].get("uri")).toEqual("./testvectors/demux_slate-aac-enfr/manifest_aac-fr_00001.aac");
+    });
+  });
+
+  test("can concatenate two demuxed VODs with 1 of 2 GroupIDs matching (and no common languages)", async () => {
+    const playlist: IPlaylistEntry[] = [
+      {
+        id: "001",
+        uri: "./testvectors/demux_slate-aacec3-enfr/manifest.m3u8",
+      },
+      {
+        id: "002",
+        uri: "./testvectors/demux_slate-aac-svno/manifest.m3u8",
+      },
+    ];
+
+    const hlsVod = new HLSVod(playlist);
+    const loader = new FileManifestLoader();
+    await hlsVod.load(loader);
+
+    const groups = hlsVod.getAudioGroups();
+    groups.forEach((group) => {
+      const groupLangs = hlsVod.getAudioLanguagesForGroup(group);
+      groupLangs.forEach((groupLang) => {
+        const m3u = hlsVod.getAudioVariant(group, groupLang);
+        expect(m3u.get("targetDuration")).toEqual(10);
+        expect(Math.ceil(m3u.totalDuration())).toEqual(20);
+      });
+      const m3u_1 = hlsVod.getAudioVariant(group, groupLangs[0]);
+      expect(m3u_1.items.PlaylistItem[0].get("uri")).toEqual(`./testvectors/demux_slate-aacec3-enfr/manifest_${group}-en_00001.aac`);
+      expect(m3u_1.items.PlaylistItem[1].get("uri")).toEqual("./testvectors/demux_slate-aac-svno/manifest_aac-no_00001.aac");
+      const m3u_2 = hlsVod.getAudioVariant(group, groupLangs[1]);
+      expect(m3u_2.items.PlaylistItem[0].get("uri")).toEqual(`./testvectors/demux_slate-aacec3-enfr/manifest_${group}-fr_00001.aac`);
+      expect(m3u_2.items.PlaylistItem[1].get("uri")).toEqual("./testvectors/demux_slate-aac-svno/manifest_aac-no_00001.aac");
     });
   });
 
@@ -384,7 +483,7 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
     });
   });
 
-  test("can concatenate two demuxed VODs with 0 of 2 GroupIDs matching (and no common languages)", async () => {
+  test("can concatenate two demuxed VODs with 2 of 2 GroupIDs matching (and no common languages)", async () => {
     const playlist: IPlaylistEntry[] = [
       {
         id: "001",
@@ -392,7 +491,7 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
       },
       {
         id: "002",
-        uri: "./testvectors/demux_slate-audio-dkde/manifest.m3u8",
+        uri: "./testvectors/demux_slate-aacec3-nosv/manifest.m3u8",
       },
     ];
 
@@ -410,10 +509,10 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
       });
       const m3u_1 = hlsVod.getAudioVariant(group, groupLangs[0]);
       expect(m3u_1.items.PlaylistItem[0].get("uri")).toEqual(`./testvectors/demux_slate-aacec3-enfr/manifest_${group}-en_00001.aac`);
-      expect(m3u_1.items.PlaylistItem[1].get("uri")).toEqual(`./testvectors/demux_slate-audio-dkde/manifest_audio-dk_00001.aac`);
+      expect(m3u_1.items.PlaylistItem[1].get("uri")).toEqual(`./testvectors/demux_slate-aacec3-nosv/manifest_${group}-no_00001.aac`);
       const m3u_2 = hlsVod.getAudioVariant(group, groupLangs[1]);
       expect(m3u_2.items.PlaylistItem[0].get("uri")).toEqual(`./testvectors/demux_slate-aacec3-enfr/manifest_${group}-fr_00001.aac`);
-      expect(m3u_2.items.PlaylistItem[1].get("uri")).toEqual(`./testvectors/demux_slate-audio-dkde/manifest_audio-dk_00001.aac`);
+      expect(m3u_2.items.PlaylistItem[1].get("uri")).toEqual(`./testvectors/demux_slate-aacec3-nosv/manifest_${group}-no_00001.aac`);
     });
   });
 
