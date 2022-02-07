@@ -165,10 +165,15 @@ export class HLSVod {
       }
       // Load Video
       for (let streamItem of vodItem.m3u.items.StreamItem) {
-        const variant = await loader.load(baseUrl + streamItem.get("uri"));
+        const streamItemUri = streamItem.get("uri");
+        const variant = await loader.load(baseUrl + streamItemUri);
+        if (!variant.get("playlistType") || variant.get("playlistType") !== "VOD") {
+          variant.set("playlistType", "VOD");
+        }
+        const [_, streamItemUriPath] = (baseUrl + streamItemUri).match(/^(.*)\/(.*?)$/);
         variant.items.PlaylistItem.map((item) => {
           const uri = item.get("uri");
-          item.set("uri", baseUrl + uri);
+          item.set("uri", streamItemUriPath + "/" + uri);
         });
         const bw = streamItem.get("bandwidth");
         if (i > 0) {
@@ -190,10 +195,15 @@ export class HLSVod {
       // Load Audio
       for (let mediaItem of vodItem.m3u.items.MediaItem) {
         if (mediaItem.attributes.attributes["type"] === "AUDIO") {
-          const audioVariantM3U = await loader.load(baseUrl + mediaItem.get("uri"));
+          const mediaItemUri = mediaItem.get("uri");
+          const audioVariantM3U = await loader.load(baseUrl + mediaItemUri);
+          if (!audioVariantM3U.get("playlistType") || audioVariantM3U.get("playlistType") !== 'VOD') {
+            audioVariantM3U.set("playlistType", "VOD");
+          }
+          const [_, mediaItemUriPath] = (baseUrl + mediaItemUri).match(/^(.*)\/(.*?)$/);
           audioVariantM3U.items.PlaylistItem.map((item) => {
             const uri = item.get("uri");
-            item.set("uri", baseUrl + uri);
+            item.set("uri", mediaItemUriPath + "/" + uri);
           });
           const groupId = mediaItem.get("group-id");
           const language = mediaItem.get("language");
