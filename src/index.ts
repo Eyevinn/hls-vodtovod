@@ -6,8 +6,30 @@ export interface IPlaylistEntry {
   uri: string;
 }
 
+export interface IVideoVariants {
+  [bw: string]: IVariantItem[];
+}
+
+export interface IAudioVariants {
+  [group: string]: { [lang: string]: IVariantItem[] };
+}
+
+export interface IM3UVideoVariants {
+  [bw: string]: any;
+}
+
+export interface IM3UAudioVariants {
+  [group: string]: { [lang: string]: any };
+}
+
+export interface IVariantItem {
+  stream: any;
+  variant: any;
+  item: any;
+}
+
 const findNearestBw = (bw, array) => {
-  const sorted = array.sort((a, b) => (b - a));
+  const sorted = array.sort((a, b) => b - a);
   return sorted.reduce((a, b) => {
     return Math.abs(b - bw) < Math.abs(a - bw) ? b : a;
   });
@@ -15,13 +37,17 @@ const findNearestBw = (bw, array) => {
 
 export class HLSVod {
   private playlist: IPlaylistEntry[];
-  private variants: {[bw: string]: any};
+  private variants: IM3UVideoVariants;
+  private audioVariants: IM3UAudioVariants;
   private streams: any[];
+  private audioStreams: any[];
 
   constructor(playlist: IPlaylistEntry[]) {
     this.playlist = playlist;
     this.variants = {};
+    this.audioVariants = {};
     this.streams = [];
+    this.audioStreams = [];
   }
 
   async load(manifestLoader?: IManifestLoader) {
@@ -30,13 +56,13 @@ export class HLSVod {
       loader = new HTTPManifestLoader();
     }
     let m3ulist = [];
-    for(let entry of this.playlist) {
+    for (let entry of this.playlist) {
       const m3u = await loader.load(entry.uri);
       m3ulist.push({
         id: entry.id,
         title: entry.title,
         uri: entry.uri,
-        m3u: m3u
+        m3u: m3u,
       });
     }
     await this.concat(m3ulist, loader);
@@ -46,58 +72,189 @@ export class HLSVod {
     return this.variants[bw];
   }
 
+  getAudioVariant(groupId, lang) {
+    return this.audioVariants[groupId][lang];
+  }
+
   getBandwidths() {
     return Object.keys(this.variants);
   }
 
-  getMultiVariant(modifier?: (bw: string) => string) {
+  getAudioGroups() {
+    return Object.keys(this.audioVariants);
+  }
+
+  getAudioLanguagesForGroup(groupId: string) {
+    return Object.keys(this.audioVariants[groupId]);
+  }
+
+  getMultiVariant(modifier?: (bw: string) => string, audioModifier?: (groupAndLang: string) => string) {
     if (modifier) {
-      this.streams.map(streamItem => {
+      this.streams.map((streamItem) => {
         const uri = modifier(streamItem.get("bandwidth"));
         streamItem.set("uri", uri);
       });
     }
-    return this.streams;
+    if (audioModifier) {
+      this.audioStreams.map((mediaItem) => {
+        const uri = audioModifier(mediaItem.get("group-id") + "-" + mediaItem.get("language"));
+        mediaItem.set("uri", uri);
+      });
+    }
+    return this.streams.concat(this.audioStreams);
   }
 
-  toString(modifier?: (bw: string) => string) {
+  toString(modifier?: (bw: string) => string, audioModifier?: (groupAndLang: string) => string) {
     let m3u8 = "";
-    m3u8 += "#EXTM3U\n" +
-      "#EXT-X-VERSION:3\n" +
-      "#EXT-X-INDEPENDENT-SEGMENTS\n";
-    this.getMultiVariant(modifier).map(item => {
+    m3u8 += "#EXTM3U\n" + "#EXT-X-VERSION:3\n" + "#EXT-X-INDEPENDENT-SEGMENTS\n";
+    this.getMultiVariant(modifier, audioModifier).map((item) => {
       m3u8 += item.toString() + "\n";
-    })
+    });
     return m3u8;
+  }
+
+  mapAudioVariants(newAudioVariants, currentAudioVariants) {
+    const currGroups = Object.keys(currentAudioVariants);
+    const newGroups = Object.keys(newAudioVariants);
+    if (newGroups.length === 0) {
+      return;
+    }
+    currGroups.forEach((currGroup) => {
+      if (newGroups.length > 0) {
+        const currGroupLangs: string[] = Object.keys(currentAudioVariants[currGroup]);
+
+        if (newGroups.includes(currGroup)) {
+          const newGroupLangs: string[] = Object.keys(newAudioVariants[currGroup]);
+          currGroupLangs.forEach((currGroupLang) => {
+            if (newGroupLangs.includes(currGroupLang)) {
+              currentAudioVariants[currGroup][currGroupLang].push(newAudioVariants[currGroup][currGroupLang][0]);
+            } else {
+              // Push Default
+              currentAudioVariants[currGroup][currGroupLang].push(newAudioVariants[currGroup][newGroupLangs[0]][0]);
+            }
+          });
+        } else {
+          const defaultGroup = newGroups[0];
+          const defaultGroupLangs = Object.keys(newAudioVariants[defaultGroup]);
+          currGroupLangs.forEach((currGroupLang) => {
+            if (defaultGroupLangs.includes(currGroupLang)) {
+              currentAudioVariants[currGroup][currGroupLang].push(newAudioVariants[defaultGroup][currGroupLang][0]);
+            } else {
+              // Push Default
+              const defaultGroupLang = defaultGroupLangs[0];
+              let thing = newAudioVariants[defaultGroup][defaultGroupLang][0];
+              currentAudioVariants[currGroup][currGroupLang].push(thing);
+            }
+          });
+        }
+      }
+    });
   }
 
   private async concat(m3ulist: any[], loader: IManifestLoader) {
     let i = 0;
-    let variants = {};
-    for(let item of m3ulist) {
+    let variants: IVideoVariants = {};
+    let audioVariants: IAudioVariants = {};
+
+    for (let vodItem of m3ulist) {
+      let temp: IAudioVariants = {};
       let baseUrl;
-      const m = item.uri.match(/^(.*)\/.*?$/);
+      const m = vodItem.uri.match(/^(.*)\/.*?$/);
       if (m) {
         baseUrl = m[1] + "/";
       }
-      for(let streamItem of item.m3u.items.StreamItem) {
+      // Load Video
+      for (let streamItem of vodItem.m3u.items.StreamItem) {
         const variant = await loader.load(baseUrl + streamItem.get("uri"));
-        variant.items.PlaylistItem.map(item => {
+        variant.items.PlaylistItem.map((item) => {
           const uri = item.get("uri");
           item.set("uri", baseUrl + uri);
         });
         const bw = streamItem.get("bandwidth");
         if (i > 0) {
           const nearestBw = findNearestBw(bw, Object.keys(variants));
-          variants[nearestBw].push({ stream: streamItem, variant: variant, item: item });
+          variants[nearestBw].push({
+            stream: streamItem,
+            variant: variant,
+            item: vodItem,
+          });
         } else {
           variants[bw] = [];
-          variants[bw].push({ stream: streamItem, variant: variant, item: item });
+          variants[bw].push({
+            stream: streamItem,
+            variant: variant,
+            item: vodItem,
+          });
         }
       }
+      // Load Audio
+      for (let mediaItem of vodItem.m3u.items.MediaItem) {
+        if (mediaItem.attributes.attributes["type"] === "AUDIO") {
+          const audioVariantM3U = await loader.load(baseUrl + mediaItem.get("uri"));
+          audioVariantM3U.items.PlaylistItem.map((item) => {
+            const uri = item.get("uri");
+            item.set("uri", baseUrl + uri);
+          });
+          const groupId = mediaItem.get("group-id");
+          const language = mediaItem.get("language");
+
+          if (i > 0) {
+            if (!temp[groupId]) {
+              temp[groupId] = {};
+            }
+            if (language) {
+              if (!temp[groupId][language]) {
+                // To avoid pushing different tracks of same language
+                temp[groupId][language] = [];
+                temp[groupId][language].push({
+                  stream: mediaItem,
+                  variant: audioVariantM3U,
+                  item: vodItem,
+                });
+              }
+            } else {
+              // To cover case where no language attribute is present (since Language is an Optional attribute)
+              if (!temp[groupId]["none"]) {
+                temp[groupId]["none"] = [];
+                temp[groupId]["none"].push({
+                  stream: mediaItem,
+                  variant: audioVariantM3U,
+                  item: vodItem,
+                });
+              }
+            }
+          } else {
+            if (!audioVariants[groupId]) {
+              audioVariants[groupId] = {};
+            }
+            if (language) {
+              if (!audioVariants[groupId][language]) {
+                audioVariants[groupId][language] = [];
+                audioVariants[groupId][language].push({
+                  stream: mediaItem,
+                  variant: audioVariantM3U,
+                  item: vodItem,
+                });
+              }
+            } else {
+              if (!audioVariants[groupId]["none"]) {
+                audioVariants[groupId]["none"] = [];
+                audioVariants[groupId]["none"].push({
+                  stream: mediaItem,
+                  variant: audioVariantM3U,
+                  item: vodItem,
+                });
+              }
+            }
+          }
+        }
+      }
+      // Map audio tracks: Merge as good as possible
+      this.mapAudioVariants(temp, audioVariants);
       i++;
     }
-    Object.keys(variants).map(bw => {
+    // Rebuild streamItem URI & add Metadata (Video)
+    Object.keys(variants).map((bw) => {
       if (variants[bw].length !== m3ulist.length) {
         delete variants[bw];
       } else {
@@ -105,29 +262,87 @@ export class HLSVod {
         let offset = 0;
         for (let i = 0; i < variants[bw].length; i++) {
           const m3u = variants[bw][i].variant;
-          const startDate = (new Date(1 + offset)).toISOString();
+          const startDate = new Date(1 + offset).toISOString();
           if (i === 0) {
             newM3u = m3u;
             variants[bw][i].stream.set("uri", "manifest_" + bw + ".m3u8");
             this.streams.push(variants[bw][i].stream);
             newM3u.items.PlaylistItem[0].set("date", new Date(1));
-            newM3u.items.PlaylistItem[0].set("daterange", 
-              `ID=${i + 1},CLASS="se.eyevinn.vodtovod",START-DATE="${startDate}",DURATION="${newM3u.totalDuration()}",X-TITLE="${variants[bw][i].item.title}",X-ASSET-ID="${variants[bw][i].item.id}"`);
+            newM3u.items.PlaylistItem[0].set(
+              "daterange",
+              `ID=${i + 1},CLASS="se.eyevinn.vodtovod",START-DATE="${startDate}",DURATION="${newM3u.totalDuration()}",X-TITLE="${
+                variants[bw][i].item.title
+              }",X-ASSET-ID="${variants[bw][i].item.id}"`
+            );
             offset += newM3u.totalDuration() * 1000;
           } else {
             m3u.items.PlaylistItem[0].set("discontinuity", true);
-            m3u.items.PlaylistItem[0].set("daterange", 
-              `ID=${i + 1},CLASS="se.eyevinn.vodtovod",START-DATE="${startDate}",DURATION="${m3u.totalDuration()}",X-TITLE="${variants[bw][i].item.title}",X-ASSET-ID="${variants[bw][i].item.id}"`);
+            m3u.items.PlaylistItem[0].set(
+              "daterange",
+              `ID=${i + 1},CLASS="se.eyevinn.vodtovod",START-DATE="${startDate}",DURATION="${m3u.totalDuration()}",X-TITLE="${
+                variants[bw][i].item.title
+              }",X-ASSET-ID="${variants[bw][i].item.id}"`
+            );
             newM3u.items.PlaylistItem = newM3u.items.PlaylistItem.concat(m3u.items.PlaylistItem);
             offset += m3u.totalDuration() * 1000;
           }
         }
-        const targetDuration = newM3u.items.PlaylistItem
-                                .map(item => item.get("duration"))
-                                .reduce((prev, current) => prev > current ? prev : current);
+        const targetDuration = newM3u.items.PlaylistItem.map((item) => item.get("duration")).reduce((prev, current) =>
+          prev > current ? prev : current
+        );
         newM3u.set("targetDuration", Math.ceil(targetDuration));
         this.variants[bw] = newM3u;
       }
+    });
+    // Rebuild streamItem URI & add Metadata (Audio)
+    const groups = Object.keys(audioVariants);
+    groups.forEach((group) => {
+      const groupLangs = Object.keys(audioVariants[group]);
+      groupLangs.forEach((groupLang) => {
+        if (audioVariants[group][groupLang].length !== m3ulist.length) {
+          delete audioVariants[group][groupLang];
+        } else {
+          let newM3u;
+          let offset = 0;
+
+          for (let i = 0; i < audioVariants[group][groupLang].length; i++) {
+            const m3u = audioVariants[group][groupLang][i].variant;
+            const startDate = new Date(1 + offset).toISOString();
+            if (i === 0) {
+              newM3u = m3u;
+              audioVariants[group][groupLang][i].stream.set("uri", "manifest_" + group + "-" + groupLang + ".m3u8");
+              this.audioStreams.push(audioVariants[group][groupLang][i].stream);
+              newM3u.items.PlaylistItem[0].set("date", new Date(1));
+              newM3u.items.PlaylistItem[0].set(
+                "daterange",
+                `ID=${i + 1},CLASS="se.eyevinn.vodtovod",START-DATE="${startDate}",DURATION="${newM3u.totalDuration()}",X-TITLE="${
+                  audioVariants[group][groupLang][i].item.title
+                }",X-ASSET-ID="${audioVariants[group][groupLang][i].item.id}"`
+              );
+              offset += newM3u.totalDuration() * 1000;
+            } else {
+              m3u.items.PlaylistItem[0].set("discontinuity", true);
+              m3u.items.PlaylistItem[0].set(
+                "daterange",
+                `ID=${i + 1},CLASS="se.eyevinn.vodtovod",START-DATE="${startDate}",DURATION="${m3u.totalDuration()}",X-TITLE="${
+                  audioVariants[group][groupLang][i].item.title
+                }",X-ASSET-ID="${audioVariants[group][groupLang][i].item.id}"`
+              );
+              newM3u.items.PlaylistItem = newM3u.items.PlaylistItem.concat(m3u.items.PlaylistItem);
+              offset += m3u.totalDuration() * 1000;
+            }
+          }
+          const targetDuration = newM3u.items.PlaylistItem.map((item) => item.get("duration")).reduce((prev, current) =>
+            prev > current ? prev : current
+          );
+          newM3u.set("targetDuration", Math.ceil(targetDuration));
+
+          if (!this.audioVariants[group]) {
+            this.audioVariants[group] = {};
+          }
+          this.audioVariants[group][groupLang] = newM3u;
+        }
+      });
     });
   }
 }
