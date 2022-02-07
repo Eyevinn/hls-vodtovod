@@ -605,4 +605,34 @@ describe("VOD2VOD library, Multi-Audio Tracks", () => {
       });
     });
   });
+
+  test("can load 2 demuxed VODs and insert full absolute URI to segments in media playlist", async () => {
+    const playlist: IPlaylistEntry[] = [
+      {
+        id: "001",
+        title: "First one",
+        uri: "./testvectors/demux_slate-aac-enfr/manifest.m3u8",
+      },
+      {
+        id: "002",
+        title: "Second one",
+        uri: "./testvectors/demux_vinn-aac-enfr/master.m3u8",
+      },
+    ];
+    const hlsVod = new HLSVod(playlist);
+    const loader = new FileManifestLoader();
+    await hlsVod.load(loader);
+
+    const bw = hlsVod.getBandwidths()[0];
+    const linesVideo = hlsVod.getVariant(bw).toString().split("\n");
+    expect(linesVideo[8]).toEqual("./testvectors/demux_slate-aac-enfr/manifest_7_00001.ts");
+    expect(linesVideo[12]).toEqual("./testvectors/demux_vinn-aac-enfr/600/600-00000.ts");
+
+    const group = hlsVod.getAudioGroups()[0];
+    const lang = hlsVod.getAudioLanguagesForGroup(group)[0];
+    const linesAudio = hlsVod.getAudioVariant(group, lang).toString().split("\n");
+    expect(linesAudio[8]).toEqual("./testvectors/demux_slate-aac-enfr/manifest_aac-en_00001.aac");
+    expect(linesAudio[12]).toEqual("./testvectors/demux_vinn-aac-enfr/aac-en/aac-en-00000.ts");
+    expect(linesAudio[linesAudio.length - 2]).toEqual("#EXT-X-ENDLIST");
+  });
 });
