@@ -104,10 +104,10 @@ export class HLSVod {
     return this.streams.concat(this.audioStreams);
   }
 
-  toString(modifier?: (bw: string) => string) {
+  toString(modifier?: (bw: string) => string, audioModifier?: (groupAndLang: string) => string) {
     let m3u8 = "";
     m3u8 += "#EXTM3U\n" + "#EXT-X-VERSION:3\n" + "#EXT-X-INDEPENDENT-SEGMENTS\n";
-    this.getMultiVariant(modifier).map((item) => {
+    this.getMultiVariant(modifier, audioModifier).map((item) => {
       m3u8 += item.toString() + "\n";
     });
     return m3u8;
